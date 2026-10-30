@@ -51,6 +51,18 @@ final class PortalContent
                 $data['personas'][$i]['foto'] = $replacement;
             }
         }
+        foreach ($data['paginas'] ?? [] as $i => $page) {
+            if (($page['imagen'] ?? null) === '/assets/marcona/director-general-8de5e4f8ae.png') {
+                $data['paginas'][$i]['imagen'] = '/assets/marcona/director-general-9b6ba7ade9.jpg';
+            }
+        }
+        // El formulario usa campos de fecha: las fechas importadas como texto se perdían al guardar.
+        if (($data['licenciamiento']['fechaResolucion'] ?? null) === '18/12/2023') {
+            $data['licenciamiento']['fechaResolucion'] = '2023-12-18';
+        }
+        if (str_starts_with((string)($data['licenciamiento']['vigenciaHasta'] ?? ''), 'Seis (6) años renovables')) {
+            $data['licenciamiento']['vigenciaHasta'] = '2029-12-18';
+        }
         foreach ($data['tupa'] ?? [] as $i => $row) {
             $categories = ['6.- CONSTANCIA Y CERTIFICADOS' => '6.- CONSTANCIAS Y CERTIFICADOS',
                 '12.-ALQUILERES' => '12.- ALQUILERES'];

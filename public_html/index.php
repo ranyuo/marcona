@@ -34,7 +34,7 @@ try {
         if (preg_match('#^api/consultas/([a-z]+)$#', $route, $match) && $method === 'POST') portal_json($app->lookup($match[1], $input));
         throw new PortalError(404, 'Ruta no encontrada.');
     }
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') throw new PortalError(405, 'Método no permitido.');
+    if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true)) throw new PortalError(405, 'Método no permitido.');
     $bootstrap = $app->bootstrap();
     header('Content-Type: text/html; charset=utf-8');
     require dirname(__DIR__).'/portal-private/views/portal.php';

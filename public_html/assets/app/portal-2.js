@@ -1062,9 +1062,15 @@ R('', path => {
   const c = DB.config, h = c.home; const i = inst();
   setSEO({ title: '', desc: c.seo.descripcion });
   const blocks = {
-    slider: () => { const sl = sortO(P('slides').filter(isPub)); if (!sl.length) return ''; return `<section class="hero" aria-roledescription="carrusel" aria-label="Destacados">${sl.map((s, k) => { const fit = s.ajuste === 'contain'; const pos = { left: '0% 50%', right: '100% 50%', top: '50% 0%', bottom: '50% 100%' }[s.enfoque] || '50% 50%'; const st = `style="object-position:${pos}"`;
-      const im = cls => k ? `<img class="${cls}" data-src="${img(s.imagen)}" alt="" decoding="async" ${st}>` : `<img class="${cls}" src="${img(s.imagen)}" alt="" fetchpriority="high" ${st}>`;
-      return `<div class="slide ${k ? '' : 'on'}${fit ? ' sl-contain' : ''}${s.capa ? ' capa-' + esc(s.capa) : ''}${s.realce === 'no' ? '' : ' sl-realce'}" role="group" aria-roledescription="diapositiva" aria-label="${k + 1} de ${sl.length}">${fit ? `<img class="sl-blur" ${k ? `data-src="${img(s.imagen)}"` : `src="${img(s.imagen)}"`} alt="" aria-hidden="true">` : ''}${im('sl-img')}<div class="cap"><div class="wrap"><span class="hero-kicker">${ic('grad')} ${esc(inst().nombreCorto)}</span><h2>${esc(s.titulo)}</h2><p>${esc(s.texto)}</p>${s.boton && resolveLink(s.enlace) ? `<a class="btn gold" ${linkAttrs(resolveLink(s.enlace))}>${esc(s.boton)} ${ic('arrow').replace('<svg', '<svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"')}</a>` : ''}</div></div></div>`; }).join('')}${sl.length > 1 ? `<button class="hero-arrow l" data-sl="-1" aria-label="Diapositiva anterior">‹</button><button class="hero-arrow r" data-sl="1" aria-label="Diapositiva siguiente">›</button><div class="hero-dots">${sl.map((_, k) => `<button data-dot="${k}" aria-label="Ir a diapositiva ${k + 1}" aria-current="${k === 0}"></button>`).join('')}</div>` : ''}</section>`; },
+    slider: () => { const sl = sortO(P('slides').filter(isPub)); if (!sl.length) return ''; return `<section class="hero" aria-roledescription="carrusel" aria-label="Destacados">${sl.map((s, k) => {
+      // «Solo imagen»: afiche con su propio texto (sin título, texto ni oscurecido). Ajuste '' = automático según la forma de la imagen.
+      const solo = s.modo === 'imagen', aj = solo ? 'contain' : (s.ajuste || 'auto'), fit = aj === 'contain'; const pos = { left: '0% 50%', right: '100% 50%', top: '50% 0%', bottom: '50% 100%' }[s.enfoque] || '50% 50%'; const st = `style="object-position:${pos}"`;
+      const src = () => k ? `data-src="${img(s.imagen)}"` : `src="${img(s.imagen)}"`;
+      const alt = solo ? esc(s.titulo) : '';
+      const im = cls => k ? `<img class="${cls}" data-src="${img(s.imagen)}" alt="${alt}" decoding="async" ${st}>` : `<img class="${cls}" src="${img(s.imagen)}" alt="${alt}" fetchpriority="high" ${st}>`;
+      const link = resolveLink(s.enlace);
+      const cap = solo ? (link ? `<a class="sl-link" ${linkAttrs(link)} aria-label="${esc(s.titulo)}"></a>` : '') : `<div class="cap"><div class="wrap"><span class="hero-kicker">${ic('grad')} ${esc(inst().nombreCorto)}</span><h2>${esc(s.titulo)}</h2><p>${esc(s.texto)}</p>${s.boton && link ? `<a class="btn gold" ${linkAttrs(link)}>${esc(s.boton)} ${ic('arrow').replace('<svg', '<svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"')}</a>` : ''}</div></div>`;
+      return `<div class="slide ${k ? '' : 'on'}${fit ? ' sl-contain' : ''}${aj === 'auto' ? ' sl-auto' : ''}${solo ? ' sl-solo' : ''}${s.capa ? ' capa-' + esc(s.capa) : ''}${s.realce === 'no' ? '' : ' sl-realce'}" role="group" aria-roledescription="diapositiva" aria-label="${k + 1} de ${sl.length}">${fit || aj === 'auto' ? `<img class="sl-blur" ${src()} alt="" aria-hidden="true">` : ''}${im('sl-img')}${cap}</div>`; }).join('')}${sl.length > 1 ? `<button class="hero-arrow l" data-sl="-1" aria-label="Diapositiva anterior">‹</button><button class="hero-arrow r" data-sl="1" aria-label="Diapositiva siguiente">›</button><div class="hero-dots">${sl.map((_, k) => `<button data-dot="${k}" aria-label="Ir a diapositiva ${k + 1}" aria-current="${k === 0}"></button>`).join('')}</div>` : ''}</section>`; },
     accesos: () => { const qs = h.accesos.map(a => { const u = resolveLink(a.enlace); return u ? `<a ${linkAttrs(u)}><span class="ic">${ic(a.icono)}</span><span><strong>${esc(a.titulo)}</strong><small>${esc(a.texto)}</small></span></a>` : ''; }).filter(Boolean); return `<section class="wrap quick" aria-label="Accesos rápidos"><div class="grid ${qs.length > 4 ? 'g3 q-many' : 'g4'}">${qs.join('')}</div></section>`; },
     bienvenida: () => { const pr = page('presentacion'); const dir = persona((P('jerarquica').find(j => j.esDirector) || {}).personaId); if (!pr || !isPub(pr)) return ''; const ps = (pr.contenido.match(/<p>[\s\S]*?<\/p>/g) || []).slice(0, 2).join(''); return `<section class="sec"><div class="wrap welcome"><img src="${img(dir && dir.foto)}" alt="Fotografía de ${esc(fullName(dir))}" loading="lazy"><div><div class="sec-h" style="text-align:left;margin:0 0 10px"><span class="kicker">Bienvenida</span><h2>Mensaje de la Dirección General</h2></div><div class="prose">${sanitize(ps)}</div><p><strong>${esc(fullName(dir))}</strong><br><span style="color:var(--muted)">${esc((P('jerarquica').find(j => j.esDirector) || {}).cargo || '')}</span></p><a class="btn" href="#/nosotros/presentacion">Leer presentación completa</a></div></div></section>`; },
     cifras: () => `<section class="sec stats" aria-label="Cifras institucionales"><div class="wrap grid g4 stats-n${Math.min(h.cifras.length, 4)}">${h.cifras.map((x, k) => `<div class="stat cif${cifLink(x) ? ' cif-a' : ''}"><span class="st-ic">${ic(['calendar', 'grad', 'users', 'award', 'star', 'building'][k % 6])}</span><b>${cifNum(cifra(x.valor))}</b><span>${esc(x.label)}</span><small>Corte: ${esc(x.corte)}</small>${cifA(x)}</div>`).join('')}</div></section>`,
@@ -1813,6 +1819,7 @@ function bindPublicChrome() {
   });
   // carrusel
   const slides = $$('.slide');
+  heroAutoFit();
   if (slides.length > 1) {
     let k = 0, paused = false; const show = n => { k = (n + slides.length) % slides.length;
       // Solo se descargan la diapositiva visible y la siguiente (antes bajaban todas, ~9 MB en la portada).
@@ -1821,9 +1828,20 @@ function bindPublicChrome() {
     $$('[data-sl]').forEach(b => b.onclick = () => show(k + +b.dataset.sl)); $$('[data-dot]').forEach(b => b.onclick = () => show(+b.dataset.dot));
     const hero = $('.hero'); hero.onmouseenter = () => paused = true; hero.onmouseleave = () => paused = false; hero.addEventListener('focusin', () => paused = true); hero.addEventListener('focusout', () => paused = false);
     if (!PREVIEW && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      window.__sl = setInterval(() => { if (!paused && !document.hidden && document.body.contains(hero)) show(k + 1); }, 6500);
+      window.__sl = setInterval(() => { if (!paused && !document.hidden && document.body.contains(hero)) show(k + 1); }, 6000);
     }
   }
+}
+/* Ajuste automático: una imagen mucho más alta que el carrusel (afiche) se muestra completa, con los bordes difuminados. */
+function heroAutoFit() {
+  const hero = $('.hero'); if (!hero) return;
+  // Lo que tapan los bloques que suben sobre el carrusel (accesos rápidos): las imágenes completas terminan por encima.
+  let nx = hero.nextElementSibling; while (nx && !nx.offsetHeight) nx = nx.nextElementSibling;
+  hero.style.setProperty('--sl-pad', (nx ? Math.max(0, Math.round(hero.getBoundingClientRect().bottom - nx.getBoundingClientRect().top)) : 0) + 'px');
+  const fit = () => $$('.slide.sl-auto', hero).forEach(s => { const im = s.querySelector('.sl-img'); if (!im || !im.naturalWidth || !hero.offsetHeight) return;
+    s.classList.toggle('sl-contain', im.naturalWidth / im.naturalHeight < (hero.offsetWidth / hero.offsetHeight) * .8); });
+  $$('.slide.sl-auto .sl-img', hero).forEach(im => { if (im.complete && im.naturalWidth) fit(); else im.addEventListener('load', fit, { once: true }); });
+  if (!window.__heroFitBound) { window.__heroFitBound = true; let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (document.querySelector('.hero')) heroAutoFit(); }, 200); }); }
 }
 function revealOnScroll() {
   if (PREVIEW || !('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -2043,6 +2061,7 @@ function bindFields(fields, work, root, rerender) {
     work[n] = image; rerender();
     const dim = compressImage.last || {};
     if (fd.hq && dim.w && dim.w < 1600) toast(`Imagen cargada, pero mide ${dim.w} × ${dim.h} px: se verá borrosa en pantallas grandes. Use una de al menos 1920 × 800 px.`, 'warn');
+    else if (fd.hq && dim.w && dim.h && dim.w / dim.h < 1.8) toast(`Imagen cargada (${dim.w} × ${dim.h} px). Es más alta que el carrusel (1920 × 800): con «Ajuste automático» se mostrará completa, con los bordes difuminados. Si es un afiche con su propio texto, elija «Solo imagen» en «Presentación».`, 'ok');
     else toast('Imagen cargada y optimizada (' + fsize(work[n].length * .75) + (dim.w ? `, original ${dim.w} × ${dim.h} px` : '') + ').', 'ok');
   }));
   $$('[data-imgx]', root).forEach(b => b.onclick = async () => { if (await confirmBox('¿Retirar la imagen? Se usará la imagen institucional predeterminada.', { ok: 'Retirar' })) { work[b.dataset.imgx] = ''; rerender(); } });
@@ -2499,7 +2518,8 @@ SPECS.slides = {
   tabs: () => portadaTabs('s'),
   cols: [{ l: 'Orden', cls: 'c', f: r => r.orden }, { l: 'Imagen', f: r => thumb(r.imagen) }, { l: 'Título', f: r => `<b>${esc(r.titulo)}</b><br><small>${esc(r.texto)}</small>` }, { l: 'Botón', f: r => esc(r.boton) }, { l: 'Estado', f: r => stBadge(r.estado) }],
   fields: [{ n: 'titulo', l: 'Título', req: true, full: true, max: 70 }, { n: 'texto', l: 'Texto', t: 'textarea', full: true, max: 180 }, { n: 'boton', l: 'Texto del botón', max: 30 }, { n: 'enlace', l: 'Enlace del botón', ph: '#/admision o https://…' }, { n: 'imagen', l: 'Imagen de la portada', t: 'image', full: true, req: true, hq: true, hint: 'Medida recomendada: 1920 × 800 px o mayor (ideal 2560 × 1066 px), JPG o WEBP. Se guarda en alta calidad (hasta 2560 px). Deje lo importante lejos de los bordes.' },
-    { n: 'ajuste', l: 'Ajuste de la imagen', t: 'select', empty: false, opts: [['cover', 'Llenar el espacio (fotos)'], ['contain', 'Mostrar completa (afiches con texto)']], hint: '«Mostrar completa» evita que se recorte el texto de un afiche; los bordes se rellenan con la misma imagen difuminada.' },
+    { n: 'modo', l: 'Presentación', t: 'select', empty: false, opts: [['', 'Imagen con título y texto'], ['imagen', 'Solo imagen (afiche que ya trae su texto)']], hint: '«Solo imagen» muestra el afiche completo, sin título, texto ni oscurecido. Si tiene enlace, toda la imagen es clicable; el título se usa como descripción para lectores de pantalla.' },
+    { n: 'ajuste', l: 'Ajuste de la imagen', t: 'select', empty: false, opts: [['', 'Automático (recomendado)'], ['cover', 'Llenar el espacio (fotos)'], ['contain', 'Mostrar completa (afiches con texto)']], hint: '«Automático» llena el espacio con las fotos y muestra completas las imágenes más altas que el carrusel, con los bordes difuminados. «Solo imagen» siempre la muestra completa.' },
     { n: 'enfoque', l: 'Punto de enfoque', t: 'select', empty: false, opts: [['center', 'Centro'], ['left', 'Izquierda'], ['right', 'Derecha'], ['top', 'Arriba'], ['bottom', 'Abajo']], hint: 'Parte de la foto que no debe recortarse.' },
     { n: 'capa', l: 'Oscurecido para el texto', t: 'select', empty: false, opts: [['', 'Según el diseño (recomendado)'], ['suave', 'Suave'], ['fuerte', 'Fuerte'], ['ninguna', 'Sin oscurecer']] },
     { n: 'realce', l: 'Realce de imagen (contraste y color)', t: 'select', empty: false, opts: [['', 'Sí (recomendado)'], ['no', 'No']] },

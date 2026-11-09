@@ -1,5 +1,5 @@
 {
-  "__v": 13,
+  "__v": 14,
   "config": {
     "inst": {
       "nombre": "Instituto de Educación Superior Tecnológico Público “Luis Felipe de las Casas Grieve”",
@@ -23,7 +23,9 @@
       "descripcion": "Institución de educación superior pública de Marcona, licenciada por el MINEDU, que forma profesionales técnicos en Enfermería Técnica, Arquitectura de Plataformas y Servicios de TI, Mecatrónica Automotriz y Mecánica de Producción Industrial.",
       "logo": "/assets/marcona/logo-ies-lfcg.png",
       "colorPrimario": "#1c233d",
-      "denominacionAnio": ""
+      "denominacionAnio": "",
+      "distrito": "Marcona",
+      "region": "Ica"
     },
     "redes": {
       "facebook": "https://www.facebook.com/luisfelipe.delascasasgrieve.77",
@@ -187,7 +189,8 @@
           "d": "Cuatro programas de tres años con certificación modular progresiva y título a nombre de la Nación.",
           "i": "book"
         }
-      ]
+      ],
+      "programasVista": "carrusel"
     },
     "tema": "pisco",
     "mpv": {
@@ -348,7 +351,8 @@
         "base": true
       }
     },
-    "enlacesV2": true
+    "enlacesV2": true,
+    "diseno": "clasico"
   },
   "slides": [
     {
@@ -6095,7 +6099,7 @@
         "docentes": 1,
         "usuarios": 0,
         "bitacora": 1,
-        "config": 0,
+        "config": 1,
         "arquitectura": 1,
         "alumnos": 1
       },
@@ -6110,7 +6114,7 @@
         "docentes": 1,
         "usuarios": 0,
         "bitacora": 0,
-        "config": 0,
+        "config": 2,
         "arquitectura": 1,
         "alumnos": 2
       },

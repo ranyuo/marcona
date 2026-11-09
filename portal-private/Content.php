@@ -43,6 +43,26 @@ final class PortalContent
 
     public static function normalize(array $data): array
     {
+        // Valores que el navegador espera en la configuración: se completan en el servidor para que ningún perfil
+        // envíe cambios de configuración por el solo hecho de abrir el panel.
+        if(isset($data['config']['mpv'])&&is_array($data['config']['mpv'])&&!isset($data['config']['mpv']['digitos']))$data['config']['mpv']['digitos']=6;
+        // Distrito y región de la institución (instalaciones anteriores): se toman de las dos últimas partes de la dirección.
+        if(isset($data['config']['inst'])&&is_array($data['config']['inst'])&&!isset($data['config']['inst']['region'])){
+            $parts=array_values(array_filter(array_map('trim',explode(',',(string)($data['config']['inst']['direccion']??''))),'strlen'));
+            $data['config']['inst']['region']=count($parts)>=2?$parts[count($parts)-1]:'';
+            $data['config']['inst']['distrito']=count($parts)>=3?$parts[count($parts)-2]:'';
+        }
+        // «Impacto institucional» era Impacto con los colores del portal; desde que todas las estructuras usan esos colores es la misma.
+        if(($data['config']['diseno']??null)==='impacto-flv')$data['config']['diseno']='impacto';
+        if(isset($data['config']['disenoColores']['impacto-flv'])&&is_array($data['config']['disenoColores'])){
+            if(empty($data['config']['disenoColores']['impacto']))$data['config']['disenoColores']['impacto']=$data['config']['disenoColores']['impacto-flv'];
+            unset($data['config']['disenoColores']['impacto-flv']);
+        }
+        if(($data['__v']??0)<14){
+            $data['academico']['perms']['acad']['config']=2;
+            $data['academico']['perms']['dir']['config']=1;
+            $data['__v']=14;
+        }
         // Corrige únicamente las referencias antiguas conocidas, también al leer una BD existente.
         foreach ($data['personas'] ?? [] as $i => $person) {
             $photo = $person['foto'] ?? null;
@@ -86,6 +106,15 @@ final class PortalContent
                     $data[$key][$i][$field['name']] = $value;
                 }
             }
+        }
+        if(isset($data['academico'], $data['certificados'])&&class_exists(AcademicDocuments::class)){
+            AcademicDocuments::sync($data);
+            foreach(['certs'=>'cert','titulos'=>'tit'] as $key=>$prefix)foreach($data['academico'][$key] as &$row){
+                $doc=PortalPolicy::find($data['certificados'],'ref','ix:'.$prefix.':'.$row['id']);if(!$doc)continue;
+                $row+=['institucion'=>$doc['institucion']??'','estadoDoc'=>$doc['estado']??'Válido'];
+                if($key==='certs')$row+=['horasDoc'=>$doc['horas']??'','tipoHoras'=>$doc['tipoHoras']??'Académicas'];
+                else $row+=['denominacion'=>$doc['tipo'],'nivel'=>$doc['nivel']??'Superior tecnológico','pais'=>$doc['pais']??'Perú','region'=>$doc['region']??($data['config']['inst']['region']??'')];
+            }unset($row);
         }
         return $data;
     }

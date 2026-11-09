@@ -79,7 +79,7 @@ final class PortalRules
         foreach($new['slides'] as $slide)if(!($slide['deleted']??false)&&self::changed($old['slides'],$slide)){
             if(!self::safeLink($slide['enlace']??''))throw new PortalError(422,'El enlace del carrusel debe ser una ruta interna, ext:id o una URL http/https válida.');
             if(!empty($slide['boton'])&&empty($slide['enlace']))throw new PortalError(422,'Indica el enlace del botón del carrusel.');
-            foreach(['ajuste'=>['','cover','contain'],'enfoque'=>['','center','left','right','top','bottom'],'capa'=>['','suave','fuerte','ninguna'],'realce'=>['','no']] as $key=>$allowed)if(!in_array($slide[$key]??'',$allowed,true))throw new PortalError(422,'Una opción de imagen del carrusel no es válida.');
+            foreach(['modo'=>['','imagen'],'ajuste'=>['','cover','contain'],'enfoque'=>['','center','left','right','top','bottom'],'capa'=>['','suave','fuerte','ninguna'],'realce'=>['','no']] as $key=>$allowed)if(!in_array($slide[$key]??'',$allowed,true))throw new PortalError(422,'Una opción de imagen del carrusel no es válida.');
         }
         foreach($new['programas']??[] as $prog)if(is_array($prog)&&self::changed($old['programas']??[],$prog)&&isset($prog['slug'])&&(!is_string($prog['slug'])||!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D',$prog['slug'])))throw new PortalError(422,'El identificador web (slug) del programa solo admite letras minúsculas, números y guiones.');
         if(!PortalPolicy::equal($old['config']['temas']??null,$new['config']['temas']??null)){
